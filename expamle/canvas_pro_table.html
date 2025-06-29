@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>canvas_pro draw table</title>
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+    }
+
+    .container {
+        width: 100vw;
+        height: 80vh;
+    }
+
+    h1 {
+        width: 100%;
+        text-align: center;
+        margin: 12px;
+    }
+
+    .controler {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        box-sizing: border-box;
+        padding: 12px;
+    }
+
+    .controler button {
+        margin: auto;
+    }
+</style>
+<body>
+    <h1>canvas_pro draw table</h1>
+    <div class="controler">
+        <button data-ref="render">render</button>
+        <button data-ref="camear">camera pan</button>
+        <button data-ref="text">text pan</button>
+    </div>
+    <div class="container" id="webgl-api">
+    </div>
+</body>
+<script type="module">
+    import { createCanvas, createCamera, createLayer } from '../dist/index.js'
+
+    const createCell = (
+        rectW = 220,
+        rectH = 55,
+        content_type = 'text'
+    ) => {
+        const cell = {
+            x: 0,
+            y: 0,
+            rectW,
+            rectH,
+            content_type,
+            content: '',
+            styles: null,
+            rowNum: 0,
+            colNum: 0,
+            id: ''
+        }
+        return cell
+    }
+    const createStyles = (styleOverrides = {}) => {
+        const baseStyle = {
+            borderColor: '#94a3b8',
+            fontSize: '12px',
+            fontFamily: 'Arial',
+            textAlign: 'center',
+            texBaseLine: 'middle',
+            color: '#030712',
+            border: 1,
+            backgroundColor: '',
+            font_css: ''
+        }
+        const cellStyle = Object.assign(baseStyle, styleOverrides)
+        cellStyle.font_css = `${cellStyle.fontSize} ${cellStyle.fontFamily}`
+        return cellStyle
+    }
+    const createBank = (tableWidth, tableHeight) => {
+        const data = []
+        const textAttr = []
+        const borderAttr = []
+        // 初始化所有参数
+        const rows = Math.ceil(tableHeight / 50) + 1
+        const cols = Math.ceil(tableWidth / 220) + 1
+        // 模拟生成
+        for (let c = 0; c < cols; c++) {
+            data[c] = []
+            for (let r = 0; r < rows; r++) {
+                const cell = createCell()
+                const styles = createStyles()
+                cell.x = cell.rectW * c
+                cell.y = cell.rectH * r
+                cell.colNum = c
+                cell.rowNum = r
+                cell.id = `c-${c}-${r}`
+                cell.styles = styles
+                data[c][r] = cell
+            }
+        }
+        // 模拟使用
+        for (let c = 0; c < data.length; c++) {
+            for (let r = 0; r < data[c].length; r++) {
+                const { x, y, rectW, rectH, styles } = data[c][r]
+                textAttr.push({
+                    x: rectW * c,
+                    y: rectH * r,
+                    w: rectW,
+                    h: rectH,
+                    content: `c-${c}, r-${r}`,
+                    color: styles.color,
+                    font_size: styles.fontSize,
+                    font_family: styles.fontFamily,
+                    textAlign: styles.textAlign,
+                    textBaseline: styles.texBaseLine
+                })
+                borderAttr.push({
+                    x: rectW * c,
+                    y: rectH * r,
+                    w: rectW,
+                    h: rectH,
+                    color: styles.borderColor,
+                    lineWidth: 1,
+                    alpha: 1
+                })
+            }
+        }
+        return {
+            textAttr,
+            borderAttr
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        const camera = createCamera()
+        const canvas = createCanvas(document.getElementById('webgl-api'), { widht: 350, height: 350, camera })
+        const layer = createLayer(canvas.width, canvas.height, 'grid')
+        const textLayer = createLayer(canvas.width, canvas.height, 'text')
+        const { textAttr, borderAttr } = createBank(canvas.width, canvas.height)
+        canvas.append(layer, 2)
+        canvas.append(textLayer, 1)
+        // 模拟绘制的过程
+        layer.render((ctx) => {
+            borderAttr.forEach(({ x, y, w, h, color, alpha, lineWidth }) => {
+                ctx.strokeRect(x, y, w, h, color, lineWidth, alpha)
+            })
+        })
+        const drawText = (renderer) => {
+            const offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height)
+            const ctx = offscreenCanvas.getContext('2d')
+            const dpr = canvas.dpr
+            const matrix = renderer.mvMatrix
+            const [a, b, c, d, e, f] = [matrix[0], matrix[1], matrix[4], matrix[5], matrix[12], matrix[13]]
+            // 将dpr的缩放因子纳入矩阵
+            ctx.setTransform(
+                a * dpr,
+                b * dpr, // 缩放X轴
+                c * dpr,
+                d * dpr, // 缩放Y轴
+                e,
+                f // 平移
+            )
+            textAttr.forEach(item => {
+                const { x: _x, y: _y, w: _w, h: _h, font_size, font_family, content, color } = item
+                let x = _x / dpr
+                let y = _y / dpr
+                let w = _w / dpr
+                let h = _h / dpr
+                const scale = dpr * 2
+                ctx.font = `${font_size} ${font_family}`
+                ctx.fillStyle = color
+                ctx.fillText(content, x + w / 2, y + h / 2, w * 2)
+            })
+            const imageBitmap = offscreenCanvas.transferToImageBitmap()
+            const texture = renderer.createTexture(imageBitmap)
+            return {
+                texture,
+                width: canvas.width,
+                height: canvas.height,
+                x: 0,
+                y: 0
+            }
+        }
+        // 模拟文字的绘制
+        textLayer.render((renderer) => drawText(renderer))
+        document.querySelector('[data-ref="render"]').onclick = () => {
+            canvas.compose()
+        }
+        document.querySelector('[data-ref="camear"]').onclick = () => {
+            camera.pan(0, -10)
+        }
+        document.querySelector('[data-ref="text"]').onclick = () => {
+            textLayer.translate(10, 0)
+        }
+    })
+</script>
+
+</html>

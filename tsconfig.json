@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "esnext",
+      "dom",
+      "WebWorker"
+    ], // 支持的类库 esnext及dom
+    "strict": true,
+    "module": "ESNext",
+    "target": "esnext",
+    "allowJs": true,
+    "sourceMap": true, // 启用sourcemap
+    "esModuleInterop": true, // 允许通过es6语法引入commonjs模块
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": false,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "useDefineForClassFields": true,
+    "allowImportingTsExtensions": true,
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": [
+      "node_modules/@types",
+      "."
+    ],
+    "types": [
+      "env"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "env.d.ts",
+    "string-format.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "rslib.config.ts"
+  ],
+}

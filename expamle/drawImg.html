@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>drawImg test</title>
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    body,
+    html {
+        width: 100%;
+        height: 100%;
+    }
+
+    h1 {
+        margin: 14px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .content {
+        width: 100vw;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        margin: 25px 0;
+    }
+
+    .content .render_btn {
+        margin: 16px auto;
+        width: 100px;
+    }
+
+    .content .canvas_content {
+        width: 50%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .canvas_pro,
+    .native_canvas {
+        width: 350px;
+        height: 350px;
+        border: 1px solid black;
+    }
+
+    h1 {
+        width: 100%;
+        text-align: center;
+    }
+</style>
+<body>
+    <h1>drawImage</h1>
+    <div class="content">
+        <div class="canvas_content">
+            <canvas class="canvas_pro" width="350" height="350"></canvas>
+            <span>canvas_pro</span>
+            <button class="render_btn" data-ref="pro_btn">
+                render
+            </button>
+        </div>
+        <div class="canvas_content">
+            <canvas class="native_canvas"></canvas>
+            <span>native canvas</span>
+            <button class="render_btn" data-ref="native_btn">
+                render
+            </button>
+        </div>
+    </div>
+</body>
+<script type="module">
+    import { transformCanvasCtx } from '../dist/index.js'
+    const dpr = window.devicePixelRatio
+    const loadImage = () => {
+        const image = new Image()
+        image.crossOrigin = 'anonymous'
+        image.onerror = () => {
+            alert('加载图片失败')
+        }
+        image.src = './pubilc/test.png'
+        return image
+    }
+    const img = loadImage()
+    const drawImage = (ctx) => {
+        console.log(ctx)
+        ctx.drawImage(img, 0, 0)
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const canvas_pro = document.querySelector('.canvas_pro')
+        const canvas_native = document.querySelector('.native_canvas')
+        const pro = transformCanvasCtx(canvas_pro).getContext('canvas-pro')
+        const native = canvas_native.getContext('2d')
+        canvas_native.width = canvas_native.height = 350 * dpr
+        document.querySelector('[data-ref="pro_btn"]').onclick = () => {
+            drawImage(pro)
+        }
+        document.querySelector('[data-ref="native_btn"]').onclick = () => {
+            drawImage(native)
+        }
+    })
+
+</script>
+
+</html>

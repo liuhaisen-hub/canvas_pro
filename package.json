@@ -1,0 +1,29 @@
+{
+  "name": "@threemu/canvas_pro",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "tsc": "tsc -b",
+    "build": "rslib build --env-mode prod",
+    "dev": "rslib build --watch --env-mode dev"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "^7.52.8",
+    "@rslib/core": "^0.10.2",
+    "@types/node": "^22.15.32",
+    "color-convert": "^3.1.0",
+    "gl-matrix": "^3.4.3",
+    "string-format": "^2.0.0",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>native canvas draw table</title>
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+    }
+
+    .container {
+        width: 100vw;
+        height: 80vh;
+    }
+
+    h1 {
+        width: 100%;
+        text-align: center;
+        margin: 12px;
+    }
+
+    .controler {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        box-sizing: border-box;
+        padding: 12px;
+    }
+
+    .controler button {
+        margin: auto;
+    }
+</style>
+<body>
+    <h1>native canvas draw table</h1>
+    <div class="controler">
+        <button data-ref="render">render</button>
+    </div>
+    <div class="container" id="native_canvas">
+    </div>
+</body>
+<script>
+    const createCell = (
+        rectW = 220,
+        rectH = 55,
+        content_type = 'text'
+    ) => {
+        const cell = {
+            x: 0,
+            y: 0,
+            rectW,
+            rectH,
+            content_type,
+            content: '',
+            styles: null,
+            rowNum: 0,
+            colNum: 0,
+            id: ''
+        }
+        return cell
+    }
+    const createStyles = (styleOverrides = {}) => {
+        const baseStyle = {
+            borderColor: '#94a3b8',
+            fontSize: '12px',
+            fontFamily: 'Arial',
+            textAlign: 'center',
+            texBaseLine: 'middle',
+            color: '#030712',
+            border: 1,
+            backgroundColor: '',
+            font_css: ''
+        }
+        const cellStyle = Object.assign(baseStyle, styleOverrides)
+        cellStyle.font_css = `${cellStyle.fontSize} ${cellStyle.fontFamily}`
+        return cellStyle
+    }
+    const createBank = (tableWidth, tableHeight) => {
+        const data = []
+        const textAttr = []
+        const borderAttr = []
+        // 初始化所有参数
+        const rows = Math.ceil(tableHeight / 50) + 1
+        const cols = Math.ceil(tableWidth / 220) + 1
+        // 模拟生成
+        for (let c = 0; c < cols; c++) {
+            data[c] = []
+            for (let r = 0; r < rows; r++) {
+                const cell = createCell()
+                const styles = createStyles()
+                cell.x = cell.rectW * c
+                cell.y = cell.rectH * r
+                cell.colNum = c
+                cell.rowNum = r
+                cell.id = `c-${c}-${r}`
+                cell.styles = styles
+                data[c][r] = cell
+            }
+        }
+        // 模拟使用
+        for (let c = 0; c < data.length; c++) {
+            for (let r = 0; r < data[c].length; r++) {
+                const { x, y, rectW, rectH, styles } = data[c][r]
+                textAttr.push({
+                    x: rectW * c,
+                    y: rectH * r,
+                    w: rectW,
+                    h: rectH,
+                    content: `c-${c}, r-${r}`,
+                    color: styles.color,
+                    font_size: styles.fontSize,
+                    font_family: styles.fontFamily,
+                    textAlign: styles.textAlign,
+                    textBaseline: styles.texBaseLine
+                })
+                borderAttr.push({
+                    x: rectW * c,
+                    y: rectH * r,
+                    w: rectW,
+                    h: rectH,
+                    color: styles.borderColor,
+                    lineWidth: 1,
+                    alpha: 1
+                })
+            }
+        }
+        return {
+            textAttr,
+            borderAttr
+        }
+    }
+    const dpr = window.devicePixelRatio
+    document.addEventListener('DOMContentLoaded', function () {
+        const canvas = document.createElement('canvas')
+        const container = document.getElementById('native_canvas')
+        container.append(canvas)
+        const width = container.offsetWidth
+        const height = container.offsetHeight
+        canvas.width = width * dpr
+        canvas.height = height * dpr
+        canvas.style.width = width + 'px'
+        canvas.style.height = height + 'px'
+        const ctx = canvas.getContext('2d')
+        // ctx.scale(dpr, dpr)
+        const { textAttr, borderAttr } = createBank(canvas.width, canvas.height)
+        document.querySelector('[data-ref="render"]').onclick = () => {
+            borderAttr.forEach(({ x, y, w, h, color, alpha, lineWidth }) => {
+                ctx.lineWidth = lineWidth
+                ctx.color = color
+                ctx.strokeRect(x, y, w, h)
+            })
+            ctx.save()
+            ctx.scale(dpr, dpr)
+            textAttr.forEach(item => {
+                const { x: _x, y: _y, w: _w, h: _h, font_size, font_family, content, color } = item
+                let x = _x / dpr
+                let y = _y / dpr
+                let w = _w / dpr
+                let h = _h / dpr
+                const scale = dpr * 2
+                ctx.font = `${font_size} ${font_family}`
+                ctx.fillText(content, x + w / 2, y + h / 2, w * 2)
+            })
+            ctx.restore()
+        }
+    })
+</script>
+
+</html>
